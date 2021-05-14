@@ -38,7 +38,7 @@ def update_nodematch(entity_type,entity_name,name,Node,graph,nodematch,silent_mo
         silent_mode (bool): [description]
 
     Returns:
-        object: [description]
+        object: return a node object
     """
     print('Trying to merge the node {}'.format(name))
     if not silent_mode:
