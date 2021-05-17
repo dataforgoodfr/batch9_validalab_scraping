@@ -4,7 +4,7 @@ from dataiku.core.sql import SQLExecutor2
 import pandas as pd
 
 version_number = '1.1'
-version_type = 'library'
+version_type = 'validalab-scraping'
 
 
 def format_column_name(column_name):
