@@ -8,7 +8,7 @@ from dataiku.customrecipe import *
 from dataiku.core.sql import SQLExecutor2
 
 version_number = 'v1.6.1'
-version_type = 'library'
+version_type = 'validalab-scraping'
 
 
 def substitute_log_entry(log_entry, runlog, allowed_addition=True):

@@ -16,7 +16,7 @@ import itertools
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 version_info = "v1.15.2"
-version_type = 'moonshade library'
+version_type = 'validalab-scraping'
 
 
 def numeric_columns(df, include_dates=True):
