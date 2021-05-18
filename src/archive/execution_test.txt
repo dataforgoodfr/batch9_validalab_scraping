@@ -1,0 +1,371 @@
+############### SOLUTION
+(validalab) ygirard@validalab:~/python$ python or_branched.py store.simulate_creationrules_for_urls array '["https://www.nouvelobs.com/","https://www.lemonde.fr"]' test_script_auto
+*********
+* start *
+*********
+argv ['or_branched.py', 'store.simulate_creationrules_for_urls', 'array', '["https://www.nouvelobs.com/","https://www.lemonde.fr"]', 'test_script_auto']
+inline False startargs 2
+*********
+* array *
+*********
+isarray
+***********************************************************
+* ["https://www.nouvelobs.com/","https://www.lemonde.fr"] *
+***********************************************************
+else
+isarray
+startswith
+********************
+* test_script_auto *
+********************
+else
+append a
+*************
+* call args *
+*************
+[['https://www.nouvelobs.com/', 'https://www.lemonde.fr'], 'test_script_auto']
+CALL: store.simulate_creationrules_for_urls ['https://www.nouvelobs.com/', 'https://www.lemonde.fr'], 'test_script_auto'
+{'code': 'success',
+ 'result': {'https://www.lemonde.fr': 's:https|h:fr|h:lemonde|',
+            'https://www.nouvelobs.com/': 's:https|h:com|h:nouvelobs|'}}
+(validalab) ygirard@validalab:~/python$
+
+
+
+
+
+#################################TEST
+(base) ygirard@validalab:~$ docker exec -it hyphe_backend_1 /bin/bash
+root@cb93ccfefcdf:/app# ls
+archives  bin  config  config.sample  docker-entrypoint.py  hyphe_backend  requirements.txt  traph-data  traph-sockets
+root@cb93ccfefcdf:/app# cd hyphe_backend/
+root@cb93ccfefcdf:/app/hyphe_backend# ls
+__init__.py  __init__.pyc  clean_old_corpora.py  core.tac  crawler  lib  test_client.py  traph
+root@cb93ccfefcdf:/app/hyphe_backend# cp ../
+archives/             bin/                  config/               config.sample/        docker-entrypoint.py  hyphe_backend/        requirements.txt      traph-data/           traph-sockets/
+root@cb93ccfefcdf:/app/hyphe_backend# mkdir config
+root@cb93ccfefcdf:/app/hyphe_backend# cp ../config/* config/
+root@cb93ccfefcdf:/app/hyphe_backend# ./test_client.py create_corpus test
+/usr/local/lib/python2.7/site-packages/OpenSSL/crypto.py:14: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
+  from cryptography import utils, x509
+CALL: create_corpus 'test'
+{u'code': u'fail', u'message': u"argument of type 'NoneType' is not iterable"}
+root@cb93ccfefcdf:/app/hyphe_backend# ./hyphe_backend/test_client.py declare_page http://medialab.sciences-po.fr test_script_auto
+bash: ./hyphe_backend/test_client.py: No such file or directory
+root@cb93ccfefcdf:/app/hyphe_backend# ./test_client.py declare_page http://medialab.sciences-po.fr test_script_auto
+/usr/local/lib/python2.7/site-packages/OpenSSL/crypto.py:14: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
+  from cryptography import utils, x509
+CALL: declare_page 'http://medialab.sciences-po.fr', 'test_script_auto'
+{u'code': u'success',
+ u'result': {u'_id': 1,
+             u'crawled': False,
+             u'crawling_status': u'UNCRAWLED',
+             u'created': True,
+             u'creation_date': 1621355073413,
+             u'homepage': u'http://medialab.sciences-po.fr',
+             u'id': 1,
+             u'indegree': 0,
+             u'indexing_status': u'UNINDEXED',
+             u'last_modification_date': 1621355073413,
+             u'name': u'Sciences-Po.fr',
+             u'outdegree': 0,
+             u'pages_crawled': 0,
+             u'pages_total': 0,
+             u'prefixes': [u's:http|h:fr|h:sciences-po|h:www|',
+                           u's:https|h:fr|h:sciences-po|',
+                           u's:http|h:fr|h:sciences-po|',
+                           u's:https|h:fr|h:sciences-po|h:www|'],
+             u'startpages': [],
+             u'status': u'DISCOVERED',
+             u'tags': {},
+             u'undirected_degree': 0}}
+root@cb93ccfefcdf:/app/hyphe_backend# test_client.py declare_pages array '["http://medialab.sciences-po.fr", "http://www.sciences-po.fr"]' test
+WEID=$(./hyphe_backend/test_client.py store.get_webentity_for_url http://medialab.sciences-po.fr test |
+         grep "u'id':" |
+         sed -r "s/^.*: u'(.*)',/\1/")bash: test_client.py: command not found
+root@cb93ccfefcdf:/app/hyphe_backend# WEID=$(./hyphe_backend/test_client.py store.get_webentity_for_url http://medialab.sciences-po.fr test |
+>          grep "u'id':" |
+> ^C       sed -r "s/^.*: u'(.*)',/\1/")
+root@cb93ccfefcdf:/app/hyphe_backend# ./test_client.py declare_pages array '["http://medialab.sciences-po.fr", "http://www.sciences-po.fr"]' test_corpus_auto
+/usr/local/lib/python2.7/site-packages/OpenSSL/crypto.py:14: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
+  from cryptography import utils, x509
+CALL: declare_pages ['http://medialab.sciences-po.fr', 'http://www.sciences-po.fr'], 'test_corpus_auto'
+{u'code': u'fail',
+ u'errors': [{u'corpus_id': u'test_corpus_auto',
+              u'message': u'Corpus does not exist',
+              u'ready': False,
+              u'status': u'missing'},
+             {u'corpus_id': u'test_corpus_auto',
+              u'message': u'Corpus does not exist',
+              u'ready': False,
+              u'status': u'missing'}],
+ u'message': u'2 urls failed, see details in "errors" field and successes in "results" field.',
+ u'results': []}
+root@cb93ccfefcdf:/app/hyphe_backend# ./test_client.py declare_pages array '["http://medialab.sciences-po.fr", "http://www.sciences-po.fr"]' test_script_auto
+/usr/local/lib/python2.7/site-packages/OpenSSL/crypto.py:14: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
+  from cryptography import utils, x509
+CALL: declare_pages ['http://medialab.sciences-po.fr', 'http://www.sciences-po.fr'], 'test_script_auto'
+{u'code': u'success',
+ u'result': [{u'_id': 1,
+              u'crawled': False,
+              u'crawling_status': u'UNCRAWLED',
+              u'created': False,
+              u'creation_date': 1621355073413,
+              u'homepage': u'http://medialab.sciences-po.fr',
+              u'id': 1,
+              u'indegree': 0,
+              u'indexing_status': u'UNINDEXED',
+              u'last_modification_date': 1621355073413,
+              u'name': u'Sciences-Po.fr',
+              u'outdegree': 0,
+              u'pages_crawled': 0,
+              u'pages_total': 0,
+              u'prefixes': [u's:http|h:fr|h:sciences-po|h:www|',
+                            u's:https|h:fr|h:sciences-po|',
+                            u's:http|h:fr|h:sciences-po|',
+                            u's:https|h:fr|h:sciences-po|h:www|'],
+              u'startpages': [],
+              u'status': u'DISCOVERED',
+              u'tags': {u'CORE': {u'createdBy': [u'user via page']}},
+              u'undirected_degree': 0},
+             {u'_id': 1,
+              u'crawled': False,
+              u'crawling_status': u'UNCRAWLED',
+              u'created': False,
+              u'creation_date': 1621355073413,
+              u'homepage': u'http://www.sciences-po.fr',
+              u'id': 1,
+              u'indegree': 0,
+              u'indexing_status': u'UNINDEXED',
+              u'last_modification_date': 1621355073413,
+              u'name': u'Sciences-Po.fr',
+              u'outdegree': 0,
+              u'pages_crawled': 0,
+              u'pages_total': 0,
+              u'prefixes': [u's:http|h:fr|h:sciences-po|h:www|',
+                            u's:https|h:fr|h:sciences-po|',
+                            u's:http|h:fr|h:sciences-po|',
+                            u's:https|h:fr|h:sciences-po|h:www|'],
+              u'startpages': [],
+              u'status': u'DISCOVERED',
+              u'tags': {u'CORE': {u'createdBy': [u'user via page']}},
+              u'undirected_degree': 0}]}
+
+
+_______________________
+
+
+
+
+(validalab) ygirard@validalab:~/python$ python or_branched.py declare_page http://medialab.sciences-po.fr test_script_auto
+*********
+* start *
+*********
+argv ['or_branched.py', 'declare_page', 'http://medialab.sciences-po.fr', 'test_script_auto']
+inline False startargs 2
+**********************************
+* http://medialab.sciences-po.fr *
+**********************************
+else
+append a
+********************
+* test_script_auto *
+********************
+else
+append a
+*************
+* call args *
+*************
+['http://medialab.sciences-po.fr', 'test_script_auto']
+CALL: declare_page 'http://medialab.sciences-po.fr', 'test_script_auto'
+{'code': 'success',
+ 'result': {'_id': 1,
+            'crawled': False,
+            'crawling_status': 'UNCRAWLED',
+            'created': False,
+            'creation_date': 1621355073413,
+            'homepage': 'http://medialab.sciences-po.fr',
+            'id': 1,
+            'indegree': 0,
+            'indexing_status': 'UNINDEXED',
+            'last_modification_date': 1621355073413,
+            'name': 'Sciences-Po.fr',
+            'outdegree': 0,
+            'pages_crawled': 0,
+            'pages_total': 0,
+            'prefixes': ['s:http|h:fr|h:sciences-po|h:www|',
+                         's:https|h:fr|h:sciences-po|',
+                         's:http|h:fr|h:sciences-po|',
+                         's:https|h:fr|h:sciences-po|h:www|'],
+            'startpages': [],
+            'status': 'DISCOVERED',
+            'tags': {'CORE': {'createdBy': ['user via page']}},
+            'undirected_degree': 0}}
+(validalab) ygirard@validalab:~/python$ python or_branched.py declare_page http://medialab.sciences-po.fr,http://lemonde.fr test_script_auto
+*********
+* start *
+*********
+argv ['or_branched.py', 'declare_page', 'http://medialab.sciences-po.fr,http://lemonde.fr', 'test_script_auto']
+inline False startargs 2
+****************************************************
+* http://medialab.sciences-po.fr,http://lemonde.fr *
+****************************************************
+else
+append a
+********************
+* test_script_auto *
+********************
+else
+append a
+*************
+* call args *
+*************
+['http://medialab.sciences-po.fr,http://lemonde.fr', 'test_script_auto']
+CALL: declare_page 'http://medialab.sciences-po.fr,http://lemonde.fr', 'test_script_auto'
+{'code': 'fail',
+ 'message': 'Not an url: http://medialab.sciences-po.fr,http://lemonde.fr'}
+(validalab) ygirard@validalab:~/python$ python or_branched.py declare_page "http://medialab.sciences-po.fr","http://lemonde.fr" test_script_auto
+*********
+* start *
+*********
+argv ['or_branched.py', 'declare_page', 'http://medialab.sciences-po.fr,http://lemonde.fr', 'test_script_auto']
+inline False startargs 2
+****************************************************
+* http://medialab.sciences-po.fr,http://lemonde.fr *
+****************************************************
+else
+append a
+********************
+* test_script_auto *
+********************
+else
+append a
+*************
+* call args *
+*************
+['http://medialab.sciences-po.fr,http://lemonde.fr', 'test_script_auto']
+CALL: declare_page 'http://medialab.sciences-po.fr,http://lemonde.fr', 'test_script_auto'
+{'code': 'fail',
+ 'message': 'Not an url: http://medialab.sciences-po.fr,http://lemonde.fr'}
+(validalab) ygirard@validalab:~/python$ python or_branched.py store.simulate_creationrules_for_urls "https://www.nouvelobs.com/","https://www.lemonde.fr" test_script_auto
+*********
+* start *
+*********
+argv ['or_branched.py', 'store.simulate_creationrules_for_urls', 'https://www.nouvelobs.com/,https://www.lemonde.fr', 'test_script_auto']
+inline False startargs 2
+*****************************************************
+* https://www.nouvelobs.com/,https://www.lemonde.fr *
+*****************************************************
+else
+append a
+********************
+* test_script_auto *
+********************
+else
+append a
+*************
+* call args *
+*************
+['https://www.nouvelobs.com/,https://www.lemonde.fr', 'test_script_auto']
+CALL: store.simulate_creationrules_for_urls 'https://www.nouvelobs.com/,https://www.lemonde.fr', 'test_script_auto'
+{'code': 'success',
+ 'result': {'https://www.nouvelobs.com/,https://www.lemonde.fr': 's:https|h:com|h:nouvelobs|'}}
+(validalab) ygirard@validalab:~/python$ python or_branched.py store.simulate_creationrules_for_urls "https://www.nouvelobs.com/","https://www.lemonde.fr,toto" test_script_auto
+*********
+* start *
+*********
+argv ['or_branched.py', 'store.simulate_creationrules_for_urls', 'https://www.nouvelobs.com/,https://www.lemonde.fr,toto', 'test_script_auto']
+inline False startargs 2
+**********************************************************
+* https://www.nouvelobs.com/,https://www.lemonde.fr,toto *
+**********************************************************
+else
+append a
+********************
+* test_script_auto *
+********************
+else
+append a
+*************
+* call args *
+*************
+['https://www.nouvelobs.com/,https://www.lemonde.fr,toto', 'test_script_auto']
+CALL: store.simulate_creationrules_for_urls 'https://www.nouvelobs.com/,https://www.lemonde.fr,toto', 'test_script_auto'
+{'code': 'success',
+ 'result': {'https://www.nouvelobs.com/,https://www.lemonde.fr,toto': 's:https|h:com|h:nouvelobs|'}}
+(validalab) ygirard@validalab:~/python$ python or
+or_branched.py           original_test_client.py
+(validalab) ygirard@validalab:~/python$ python or_branched.py declare_pages array '["http://medialab.sciences-po.fr", "http://www.sciences-po.fr"]' test_script_auto
+*********
+* start *
+*********
+argv ['or_branched.py', 'declare_pages', 'array', '["http://medialab.sciences-po.fr", "http://www.sciences-po.fr"]', 'test_script_auto']
+inline False startargs 2
+*********
+* array *
+*********
+isarray
+*******************************************************************
+* ["http://medialab.sciences-po.fr", "http://www.sciences-po.fr"] *
+*******************************************************************
+else
+isarray
+startswith
+********************
+* test_script_auto *
+********************
+else
+append a
+*************
+* call args *
+*************
+[['http://medialab.sciences-po.fr', 'http://www.sciences-po.fr'], 'test_script_auto']
+CALL: declare_pages ['http://medialab.sciences-po.fr', 'http://www.sciences-po.fr'], 'test_script_auto'
+{'code': 'success',
+ 'result': [{'_id': 1,
+             'crawled': False,
+             'crawling_status': 'UNCRAWLED',
+             'created': False,
+             'creation_date': 1621355073413,
+             'homepage': 'http://medialab.sciences-po.fr',
+             'id': 1,
+             'indegree': 0,
+             'indexing_status': 'UNINDEXED',
+             'last_modification_date': 1621355073413,
+             'name': 'Sciences-Po.fr',
+             'outdegree': 0,
+             'pages_crawled': 0,
+             'pages_total': 0,
+             'prefixes': ['s:http|h:fr|h:sciences-po|h:www|',
+                          's:https|h:fr|h:sciences-po|',
+                          's:http|h:fr|h:sciences-po|',
+                          's:https|h:fr|h:sciences-po|h:www|'],
+             'startpages': [],
+             'status': 'DISCOVERED',
+             'tags': {'CORE': {'createdBy': ['user via page']}},
+             'undirected_degree': 0},
+            {'_id': 1,
+             'crawled': False,
+             'crawling_status': 'UNCRAWLED',
+             'created': False,
+             'creation_date': 1621355073413,
+             'homepage': 'http://www.sciences-po.fr',
+             'id': 1,
+             'indegree': 0,
+             'indexing_status': 'UNINDEXED',
+             'last_modification_date': 1621355073413,
+             'name': 'Sciences-Po.fr',
+             'outdegree': 0,
+             'pages_crawled': 0,
+             'pages_total': 0,
+             'prefixes': ['s:http|h:fr|h:sciences-po|h:www|',
+                          's:https|h:fr|h:sciences-po|',
+                          's:http|h:fr|h:sciences-po|',
+                          's:https|h:fr|h:sciences-po|h:www|'],
+             'startpages': [],
+             'status': 'DISCOVERED',
+             'tags': {'CORE': {'createdBy': ['user via page']}},
+             'undirected_degree': 0}]}
+
+
+
