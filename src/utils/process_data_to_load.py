@@ -1,3 +1,16 @@
+def ACPM_db_site_name(sites_field, ACPM_referential):
+    """[summary]
+
+    Args:
+        sites_field ([type]): [description]
+        ACPM_referential ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    site_name = ACPM_referential.get(sites_field, sites_field.lower())  # zone à risque
+    return site_name
+
 def process_name_sm(sm, node,sep=" /"):
     """A function to sanitize the names of nodes.
 
@@ -64,7 +77,7 @@ def sm_switcher(sm):
                             'separator':" /"},
                 "pinterest":{'condition':'user_name=="pin"',
                             'separator':" /"},
-                "linkedin":{'condition':'"linkedin" in node["label"].lower() and len(node["label"].lower().split(" /")) < 2',
+                "linkedin":{'condition':'"linkedin" in row["label"].lower() and len(row["label"].lower().split(" /")) < 2',
                             'separator':".../"},
              }
     return switcher.get(sm.lower(),"Not a social media")

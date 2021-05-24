@@ -1,138 +1,112 @@
 from src.utils.process_data_to_load import *
-
-
+from settings import *
+import networkx as nx
 import pandas as pd
 
-def create_dict(row, graph, nodematch, degree, silent_mode=True):
+
+def create_dict(row, json, prefixe, silentMode=True):
     """[summary]
 
     Args:
-        row (object): [description]
-        graph (object): [description]
-        nodematch (object): [description]
-        degree (str): [description]
-        silent_mode (bool, optional): [description]. Defaults to True.
+        row ([type]): [description]
+        json ([type]): [description]
+        prefixe ([type]): [description]
+        silentMode (bool, optional): [description]. Defaults to True.
 
     Returns:
-        int: 1
+        [type]: [description]
     """
-    Entity_dict = {"D"+degree +"_"+ key : row[key] for key in row.keys()}
-    
-    labels = nodematch.labels
-    print("labels ", labels)
-    push_item = dict(Entity_dict, **dict(nodematch))
-    print("Item to push ",push_item)
-    graph.push(Node(*labels, **push_item))
-    return 1 #1
+    Entity_dict = {prefixe+"_"+ key : row[key] for key in row.keys()}
+    push_item = dict(Entity_dict, **dict(json))
+    return push_item
 
-def update_nodematch(entity_type,entity_name,name,Node,graph,nodematch,silent_mode):
+
+  
+def create_node(row,sourcePrefixe, entityType,name, label,silentMode=True):
     """[summary]
 
     Args:
-        entity_type (str): [description]
-        entity_name (str): [description]
-        name (str): [description]
-        Node (object): [description]
-        graph (object): [description]
-        nodematch (object): [description]
-        silent_mode (bool): [description]
-
-    Returns:
-        object: return a node object
+        row ([type]): [description]
+        sourcePrefixe ([type]): [description]
+        entityType ([type]): [description]
+        name ([type]): [description]
+        label ([type]): [description]
+        silentMode (bool, optional): [description]. Defaults to True.
     """
-    print('Trying to merge the node {}'.format(name))
-    if not silent_mode:
-        print('new node')
-    try:
-        if entity_type=='Entity' : 
-            nodematch = Node(entity_type, entity_name = name)
-        elif entity_type=='Website':
-            nodematch = Node(entity_type, site_name = name)
+    if not silentMode:
+        print("Creating Node")
+        print("Entity Type is {}".format(entityType))
+    json= {}
+    if entityType!='socialMedia':
+#         if sourcePrefix="ACPM_SiteGP_" or sourcePrefixe="ACPM_SitePro_":
+#             json[switch_entity_name(entityType)]=ACPM_db_site_name(row[label])
+#         else:
+#             json[switch_entity_name(entityType)]=row[label]
+        json[switch_entity_name(entityType)]=row[label]
+        pushItem=create_dict(row, json,sourcePrefixe)
+    else :
+        socialMedia=get_social_media(name)
+        user_name = process_name_sm(socialMedia, row, sm_switcher(socialMedia.lower())['separator'])
+        json[switch_entity_name(entityType)]=user_name
+        condition = eval(sm_switcher(socialMedia.lower())['condition'])
+        if (condition):
+            print("cannot create " + socialMedia + " node because of name:", row[label])
+            pushItem = {}
         else:
-            nodematch = Node(entity_type, user_name = name)
+            pushItem=create_dict(row, json,sourcePrefixe)
 
-        nodematch.__primarylabel__ = entity_type
-        nodematch.__primarykey__ = entity_name
-        graph.merge(nodematch)
-        print('Merging the node {}'.format(name))
-    except:
-        print("could not import ", name)
-        nodematch = None
-    return nodematch
+    return pushItem
 
 
-def create_node(row, graph, entity_type,name,nodematch, silent_mode):
+
+def create_entity(row,source='hyphe',sourcePrefixe='D0',silentMode=True):
     """[summary]
 
     Args:
-        row (object): [description]
-        graph (object): [description]
-        entity_type (str): [description]
-        name (str): [description]
-        nodematch (object): [description]
-        silent_mode (bool): [description]
+        row ([type]): [description]
+        source (str, optional): [description]. Defaults to 'hyphe'.
+        sourcePrefixe (str, optional): [description]. Defaults to 'D0'.
+        silentMode (bool, optional): [description]. Defaults to True.
 
     Returns:
-        int: 1
+        [type]: [description]
     """
-    if not silent_mode:
-      print("Creating Node")
-      print("Entity Type is {}".format(entity_type))
-    if entity_type=='Website'  :
-      nodematch=update_nodematch(entity_type=entity_type, entity_name=switch_entity_name(entity_type),name=name,nodematch=nodematch,silent_mode=silent_mode)
-      if not silent_mode:
-        print("Creating Website Node")
-        print("Nodematch is {}".format(nodematch))
-      #eventually specific processing for websites
-    elif entity_type=='Entity':
-      nodematch=update_nodematch(entity_type=entity_type, entity_name=switch_entity_name(entity_type),name=name,nodematch=nodematch,silent_mode=silent_mode)
-      #specific processing for Entity
-      diploDict = {"Diplo_" + key: row[key] for key in row.keys()}
-      labels = nodematch.labels
-      pushItem = dict(diploDict, **dict(nodematch))
-      graph.push(Node(*labels, **pushItem))
-    elif entity_type=='Youtube':
-      nodematch=update_nodematch( entity_type=entity_type, entity_name=switch_entity_name(entity_type),name=name,nodematch=nodematch,silent_mode=silent_mode)
-      #eventually specific processing for Youtube
-    elif entity_type=='socialMedia':
-      #specific processing for socialMedia
-      socialMedia=get_social_media(name)
-      user_name = process_name_sm(socialMedia, row, sm_switcher(socialMedia.lower())['separator'])
-      condition = eval(sm_switcher(socialMedia.lower())['condition'])
-      if (condition):
-          print("cannot create " + socialMedia + " node because of name:", row['label'])
-          nodematch = None
-      else:
-          nodematch=update_nodematch(entity_type=socialMedia,entity_name=switch_entity_name(entity_type),name=user_name,nodematch=nodematch,silent_mode=silent_mode)
-        
+    if not silentMode:
+        print(row['name'])
+    if source=="hyphe":
+        node={}
+        if any([s in row['name'].lower() for s in ['facebook','linkedin','twitter','pinterest']]):
+            node=create_node(row=row,sourcePrefixe=sourcePrefixe,entityType='socialMedia',name=row['name'],label="name",silentMode=silentMode)
+        else:
+            node=create_node(row,sourcePrefixe,'Website',row['name'],"name",silentMode)
+    elif source=="youtube":
+        node=create_node(row,sourcePrefixe,'Youtube',row['title'],"title",silentMode)
     else:
-      print("Don't know the entity type {}".format(entity_type))
-    if not silent_mode:
-      print("The nodematch is {}".format(nodematch))
-    create_dict(row, graph, nodematch, entity_type)
-    return 1
+        node=create_node(row,sourcePrefixe,'Entity',row['nom'],"nom",silentMode)
+    print(node)
+    return node
 
 
 
-# row, graph, entity_type,name,nodematch=None, silent_mode=True
-def create_entity(row, graph, source,nodematch=None,silent_mode=True):
-    """[summary]
+def get_data(dataframe,source,sourcePrefixe)  :
+    """
 
     Args:
-        row (pandas row): [description]
-        graph (graph): [description]
-        source (str): [description]
-        nodematch (node, optional): [description]. Defaults to None.
-        silent_mode (bool, optional): [description]. Defaults to True.
+        dataframe:
+        source:
+        sourcePrefixe:
+
+    Returns:
+
     """
-    if not silent_mode:
-        print(nodematch)
-    if source=="hyphe":
-        if any([s in row['name'].lower() for s in ['facebook','linkedin','twitter','pinterest']]):
-            create_node(row=row,graph=graph,entity_type='socialMedia',name=row['name'],nodematch=nodematch,silent_mode=silent_mode)
-        else: 
-            create_node(row,graph,'Website',row['name'],nodematch=nodematch,silent_mode=silent_mode)
-    elif source=="youtube":
-        create_node(row,graph,'Youtube',row['title'],nodematch=nodematch,silent_mode=silent_mode)
-    else:
-        create_node(row,graph,'Entity',row['nom'],nodematch=nodematch,silent_mode=silent_mode)
+    list_dict = []
+    dataframe.apply(lambda row: list_dict.append(create_entity(row, source, sourcePrefixe)), axis=1)
+    return list_dict
+
+
+
+    
+
+
+    
+
