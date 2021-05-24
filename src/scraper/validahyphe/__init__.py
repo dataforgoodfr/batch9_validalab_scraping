@@ -1,7 +1,7 @@
 from twisted.internet import reactor
 from txjsonrpc.web.jsonrpc import Proxy
 
-version = '0.1'
+version = '0.2'
 version_info = 'validalab-scraping'
 
 
