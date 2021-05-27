@@ -10,6 +10,7 @@ __pycache__/
 .idea
 .idea/
 .env
+add-commit-push.py
 # Distribution / packaging
 .Python
 build/
