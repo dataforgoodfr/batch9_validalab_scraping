@@ -1,5 +1,3 @@
-from src.utils.load_data_to_neo4j import *
-
 from settings import *
 import networkx as nx
 import pandas as pd
