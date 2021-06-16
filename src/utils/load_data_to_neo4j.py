@@ -1,7 +1,4 @@
-from src.utils.process_data_to_load import *
-from settings import *
-import networkx as nx
-import pandas as pd
+from src.validalabUtils.validalabNeo4jUtils import *
 
 
 def create_dict(row, json, prefixe, silentMode=True):

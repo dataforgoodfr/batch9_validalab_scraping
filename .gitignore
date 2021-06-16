@@ -5,7 +5,12 @@ __pycache__/
 
 # C extensions
 *.so
-
+*.idea
+*.idea/
+.idea
+.idea/
+.env
+add-commit-push.py
 # Distribution / packaging
 .Python
 build/
@@ -93,7 +98,7 @@ ipython_config.py
 
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow
 __pypackages__/
-
+__pycache__
 # Celery stuff
 celerybeat-schedule
 celerybeat.pid
@@ -116,7 +121,7 @@ venv.bak/
 
 # Rope project settings
 .ropeproject
-
+*__pycache__
 # mkdocs documentation
 /site
 
