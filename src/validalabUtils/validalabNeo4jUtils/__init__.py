@@ -56,7 +56,7 @@ def get_entity_name(link):
     return {'name': entity_name, 'address': entity_address, 'type': entity_type}
 
 
-def get_node_information(url, silent_mode=True, marker_id=None):
+def get_node_info(url, silent_mode=True, marker_id=None):
     """
     """
     if pd.isnull(url):
