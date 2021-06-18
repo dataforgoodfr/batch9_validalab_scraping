@@ -2,7 +2,7 @@ import pandas as pd
 from urllib.parse import urlparse
 import warnings
 
-warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore')
 
 version_info = "v1.16"
 version_type = 'validalab-scraping'
