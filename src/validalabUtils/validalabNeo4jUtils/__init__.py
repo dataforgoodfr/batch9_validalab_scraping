@@ -114,7 +114,7 @@ def get_node_information(url, silent_mode=True, marker_id=None):
     )
 
 
-def add_node_info(data, url_column='link'):
+def add_node_information(data, url_column='link'):
     """ add node information from a dataset containing urls"""
     return data.merge(data.apply(lambda row: get_node_information(url=row[url_column]), axis=1), left_index=True,
                       right_index=True)
