@@ -4,7 +4,7 @@ import warnings
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-version_info = "v1.15.2"
+version_info = "v1.16"
 version_type = 'validalab-scraping'
 
 
