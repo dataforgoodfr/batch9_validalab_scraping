@@ -102,8 +102,6 @@ def push_relations(
             lambda row: relations[target_type].add_relationship({source_property: source_data['nodeName']},
                                                                 {target_property: row['nodeName']},
                                                                 source_metadata), axis=1)
-    if simulation_mode:
-        print("---------------------------------SIMULATION----------------------------------")
     if not silent_mode:
         print("------------------------------- MERGING NODES -------------------------------")
     for target_type in target_nodes:
