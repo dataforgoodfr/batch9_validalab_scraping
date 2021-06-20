@@ -32,58 +32,58 @@ def push_relations(
 
     # ajouter la source de recommandation à la base de données
     # récupérer les métadonnées de la source via son url
-    sourceData = get_entity_name(source_metadata['source'])
+    source_data = get_entity_name(source_metadata['source'])
     if type(target_list) is not list:
         target_list = [target_list]
     if not silent_mode:
         print("------------------------------- CREATING SOURCE NODES -------------------------------")
         # créer un noeud d'enregistrement pour la source
-    sourceNode = NodeSet([source_type], merge_keys=[source_property])
+    source_node = NodeSet([source_type], merge_keys=[source_property])
     # ajouter et pousser le noeud de la source dans la base de données
-    add_node_if_not_existing(graph, source_property, sourceData['name'], sourceData['type'], sourceNode, silent_mode)
+    add_node_if_not_existing(graph, source_property, source_data['name'], source_data['type'], source_node, silent_mode)
     if not silent_mode:
         print("------------------------------- GETTING TARGETS DATA -------------------------------")
         # ré
-    targetMetadata = [get_entity_name(entity) for entity in target_list]
+    target_metadata = [get_entity_name(entity) for entity in target_list]
     # récupérer les données des cibles
-    targetData = pd.DataFrame.from_dict(targetMetadata)
+    target_data = pd.DataFrame.from_dict(target_metadata)
     if not silent_mode:
-        print("1- DataFrame\n ", targetData.head())
+        print("1- DataFrame\n ", target_data.head())
     # récupérer les types de cibles (Website, Facebook, Twitter, etc..)
-    targetTypes = targetData.groupby('type').groups.keys()
+    target_types = target_data.groupby('type').groups.keys()
     if not silent_mode:
-        print("2- Targets types ", targetTypes)
+        print("2- Targets types ", target_types)
     # créer des listes Nodes pour réaliser des merges groupés
     relations = {}
-    targetNodes = {}
+    target_nodes = {}
     # itérer les types de cibles existants
     if not silent_mode:
         print("------------------------------- CREATING TARGETS NODES -------------------------------")
-    for targetType in targetTypes:
-        targetProperty = switch_entity_name(targetType)
-        targetNodes[targetType] = NodeSet([targetType], merge_keys=[targetProperty])
-        relations[targetType] = RelationshipSet(name_of_relation,
-                                                [source_type], [targetType],
-                                                [source_property], [targetProperty])
+    for target_type in target_types:
+        target_property = switch_entity_name(target_type)
+        target_nodes[target_type] = NodeSet([target_type], merge_keys=[target_property])
+        relations[target_type] = RelationshipSet(name_of_relation,
+                                                [source_type], [target_type],
+                                                [source_property], [target_property])
 
-        targetDataFrames = targetData.groupby('type').get_group(targetType)
-        targetDataFrames.apply(lambda row: add_node_if_not_existing(graph, targetProperty, row['name'], targetType,
-                                                                    targetNodes[targetType], silent_mode), axis=1)
-        targetDataFrames.apply(lambda row: relations[targetType].add_relationship({source_property: sourceData['name']},
-                                                                                  {targetProperty: row['name']},
+        target_dataframes = target_data.groupby('type').get_group(target_type)
+        target_dataframes.apply(lambda row: add_node_if_not_existing(graph, target_property, row['name'], target_type,
+                                                                    target_nodes[target_type], silent_mode), axis=1)
+        target_dataframes.apply(lambda row: relations[target_type].add_relationship({source_property: source_data['name']},
+                                                                                  {target_property: row['name']},
                                                                                   source_metadata), axis=1)
     if not silent_mode:
         print("------------------------------- MERGING NODES -------------------------------")
-    for targetType in targetNodes:
+    for target_type in target_nodes:
         if not silent_mode:
-            print("Merging nodes for target type", targetType)
-        # targetNodes[targetType].merge(graph)
+            print("Merging nodes for target type", target_type)
+        # target_nodes[target_type].merge(graph)
     if not silent_mode:
         print("------------------------------- MERGING RELATIONS -------------------------------")
-    for targetType in relations.keys():
+    for target_type in relations.keys():
         if not silent_mode:
-            print("Merging relations for target type", targetType)
-        # relations[targetType].merge(graph)
+            print("Merging relations for target type", target_type)
+        # relations[target_type].merge(graph)
     return True
 
 
