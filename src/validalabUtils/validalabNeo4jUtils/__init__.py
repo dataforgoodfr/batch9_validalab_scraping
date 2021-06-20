@@ -78,14 +78,14 @@ def push_relations(
             return False
         target_metadata = [get_node_information(entity) for entity in target_list]
     else:
-        target_metadata = {
+        target_metadata = [{
             'nodeName': source_metadata.nodeName,
             'profileURL': source_metadata.profileURL,
             'nodeType': source_metadata.nodeType,
             'nodeExtra': source_metadata.nodeExtra
-        }
+        }]
     # récupérer les données des cibles
-    target_data = pd.DataFrame.from_dict(target_metadata) if not dataframe_mode else pd.DataFrame(target_metadata)
+    target_data = pd.DataFrame.from_dict(target_metadata)
     if not silent_mode:
         print("1- DataFrame\n ", target_data.head())
     # récupérer les types de cibles (Website, Facebook, Twitter, etc..)
