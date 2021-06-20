@@ -1,11 +1,90 @@
 import pandas as pd
 from urllib.parse import urlparse
 import warnings
+from graphio import NodeSet, RelationshipSet
 
 warnings.simplefilter(action='ignore')
 
-version_info = "v1.16"
+version_info = "v1.17"
 version_type = 'validalab-scraping'
+
+
+def push_relations(
+        graph,
+        name_of_relation,
+        source_type,
+        source_property,
+        source_metadata,
+        target_list,
+        silent_mode=True
+):
+    """[summary]
+
+    Args:
+        name_of_relation ([type]): Nom de la relation ajouter
+        source_type ([type]): Type du noeud source de la relation
+        source_property ([type]): Nom de la propriété de merge de la source(Merge Key)
+        source_metadata ([type]): {'meaning': 'définition', 'weigth':'poids', 'source':'url de la source'}
+        target_list ([type]): Liste des url cibles à ajouter
+        graph:
+        silent_mode:
+    """
+
+    # ajouter la source de recommandation à la base de données
+    # récupérer les métadonnées de la source via son url
+    sourceData = get_entity_name(source_metadata['source'])
+    if type(target_list) is not list:
+        target_list = [target_list]
+    if not silent_mode:
+        print("------------------------------- CREATING SOURCE NODES -------------------------------")
+        # créer un noeud d'enregistrement pour la source
+    sourceNode = NodeSet([source_type], merge_keys=[source_property])
+    # ajouter et pousser le noeud de la source dans la base de données
+    add_node_if_not_existing(graph, source_property, sourceData['name'], sourceData['type'], sourceNode, silent_mode)
+    if not silent_mode:
+        print("------------------------------- GETTING TARGETS DATA -------------------------------")
+        # ré
+    targetMetadata = [get_entity_name(entity) for entity in target_list]
+    # récupérer les données des cibles
+    targetData = pd.DataFrame.from_dict(targetMetadata)
+    if not silent_mode:
+        print("1- DataFrame\n ", targetData.head())
+    # récupérer les types de cibles (Website, Facebook, Twitter, etc..)
+    targetTypes = targetData.groupby('type').groups.keys()
+    if not silent_mode:
+        print("2- Targets types ", targetTypes)
+    # créer des listes Nodes pour réaliser des merges groupés
+    relations = {}
+    targetNodes = {}
+    # itérer les types de cibles existants
+    if not silent_mode:
+        print("------------------------------- CREATING TARGETS NODES -------------------------------")
+    for targetType in targetTypes:
+        targetProperty = switch_entity_name(targetType)
+        targetNodes[targetType] = NodeSet([targetType], merge_keys=[targetProperty])
+        relations[targetType] = RelationshipSet(name_of_relation,
+                                                [source_type], [targetType],
+                                                [source_property], [targetProperty])
+
+        targetDataFrames = targetData.groupby('type').get_group(targetType)
+        targetDataFrames.apply(lambda row: add_node_if_not_existing(graph, targetProperty, row['name'], targetType,
+                                                                    targetNodes[targetType], silent_mode), axis=1)
+        targetDataFrames.apply(lambda row: relations[targetType].add_relationship({source_property: sourceData['name']},
+                                                                                  {targetProperty: row['name']},
+                                                                                  source_metadata), axis=1)
+    if not silent_mode:
+        print("------------------------------- MERGING NODES -------------------------------")
+    for targetType in targetNodes:
+        if not silent_mode:
+            print("Merging nodes for target type", targetType)
+        # targetNodes[targetType].merge(graph)
+    if not silent_mode:
+        print("------------------------------- MERGING RELATIONS -------------------------------")
+    for targetType in relations.keys():
+        if not silent_mode:
+            print("Merging relations for target type", targetType)
+        # relations[targetType].merge(graph)
+    return True
 
 
 def switch_entity_name(entity_type):
