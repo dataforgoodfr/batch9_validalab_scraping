@@ -275,12 +275,12 @@ def find_node(graph, node_type, merge_key, property_name, silent_mode=True):
     return graph.nodes.match(node_type).where(where_clause).first()
 
 
-def create_and_add_node(graph, entity_type, merge_key, property_name, node=None, silent_mode=True):
+def create_and_add_node(graph, node_type, merge_key, property_name, node=None, silent_mode=True):
     """Fonction permettant de créer et ajouter noeud
 
     Args:
         graph ([type]): [description]
-        entity_type ([type]): [description]
+        node_type ([type]): [description]
         merge_key ([type]): [description]
         property_name ([type]): [description]
         node ([type], optional): [description]. Defaults to None.
@@ -293,7 +293,7 @@ def create_and_add_node(graph, entity_type, merge_key, property_name, node=None,
     if not silent_mode:
         print("Node: ", node)
     if node is None:
-        node = NodeSet([entity_type], merge_keys=[merge_key])
+        node = NodeSet([node_type], merge_keys=[merge_key])
         node.add_node({merge_key: property_name})
         if not silent_mode:
             print("Node is not provided for ", property_name)
@@ -345,3 +345,5 @@ def add_node_if_not_existing(graph, merge_key, property_name, node_type, node=No
             node=node,
             silent_mode=silent_mode
         )
+
+
