@@ -2,24 +2,25 @@ import pandas as pd
 from urllib.parse import urlparse
 import warnings
 from graphio import NodeSet, RelationshipSet
+import karmahutils as kut
 
 warnings.simplefilter(action='ignore')
 
-version_info = "v1.17"
+version_info = "v1.18"
 version_type = 'validalab-scraping'
 
 
 def push_relations(
         graph,
         name_of_relation,
-        source_type,
         source_property,
         source_metadata,
         target_list,
-        silent_mode=True
+        source_type=None,
+        silent_mode=True,
+        simulation_mode=False
 ):
     """[summary]
-
     Args:
         name_of_relation ([type]): Nom de la relation ajouter
         source_type ([type]): Type du noeud source de la relation
@@ -28,11 +29,19 @@ def push_relations(
         target_list ([type]): Liste des url cibles à ajouter
         graph:
         silent_mode:
+        simulation_mode:
     """
 
     # ajouter la source de recommandation à la base de données
     # récupérer les métadonnées de la source via son url
-    source_data = get_entity_name(source_metadata['source'])
+    source_data = get_node_information(source_metadata['source'])
+    if source_type is not None:
+        source_data['nodeType'] = source_type
+    if not silent_mode:
+        kut.display_message('push relations')
+        print(vars())
+        print('source data')
+        print(source_data)
     if type(target_list) is not list:
         target_list = [target_list]
     if not silent_mode:
@@ -40,17 +49,27 @@ def push_relations(
         # créer un noeud d'enregistrement pour la source
     source_node = NodeSet([source_type], merge_keys=[source_property])
     # ajouter et pousser le noeud de la source dans la base de données
-    add_node_if_not_existing(graph, source_property, source_data['name'], source_data['type'], source_node, silent_mode)
+
+    add_node_if_not_existing(
+        graph=graph,
+        merge_key=source_property,
+        property_name=source_data['nodeName'],
+        node_type=source_data['nodeType'],
+        node=source_node,
+        silent_mode=silent_mode,
+        simulation_mode=simulation_mode
+    )
+
     if not silent_mode:
         print("------------------------------- GETTING TARGETS DATA -------------------------------")
         # ré
-    target_metadata = [get_entity_name(entity) for entity in target_list]
+    target_metadata = [get_node_information(entity) for entity in target_list]
     # récupérer les données des cibles
     target_data = pd.DataFrame.from_dict(target_metadata)
     if not silent_mode:
         print("1- DataFrame\n ", target_data.head())
     # récupérer les types de cibles (Website, Facebook, Twitter, etc..)
-    target_types = target_data.groupby('type').groups.keys()
+    target_types = target_data.groupby('nodeType').groups.keys()
     if not silent_mode:
         print("2- Targets types ", target_types)
     # créer des listes Nodes pour réaliser des merges groupés
@@ -63,27 +82,45 @@ def push_relations(
         target_property = switch_entity_name(target_type)
         target_nodes[target_type] = NodeSet([target_type], merge_keys=[target_property])
         relations[target_type] = RelationshipSet(name_of_relation,
-                                                [source_type], [target_type],
-                                                [source_property], [target_property])
+                                                 [source_type], [target_type],
+                                                 [source_property], [target_property])
 
-        target_dataframes = target_data.groupby('type').get_group(target_type)
-        target_dataframes.apply(lambda row: add_node_if_not_existing(graph, target_property, row['name'], target_type,
-                                                                    target_nodes[target_type], silent_mode), axis=1)
-        target_dataframes.apply(lambda row: relations[target_type].add_relationship({source_property: source_data['name']},
-                                                                                  {target_property: row['name']},
-                                                                                  source_metadata), axis=1)
+        target_dataframes = target_data.groupby('nodeType').get_group(target_type)
+        target_dataframes.apply(
+            lambda row: add_node_if_not_existing(
+                graph=graph,
+                merge_key=target_property,
+                property_name=row['nodeName'],
+                node_type=target_type,
+                node=target_nodes[target_type],
+                silent_mode=silent_mode,
+                simulation_mode=simulation_mode
+            ),
+            axis=1
+        )
+        target_dataframes.apply(
+            lambda row: relations[target_type].add_relationship({source_property: source_data['nodeName']},
+                                                                {target_property: row['nodeName']},
+                                                                source_metadata), axis=1)
+    if simulation_mode:
+        print("---------------------------------SIMULATION----------------------------------")
     if not silent_mode:
         print("------------------------------- MERGING NODES -------------------------------")
     for target_type in target_nodes:
         if not silent_mode:
             print("Merging nodes for target type", target_type)
-        # target_nodes[target_type].merge(graph)
+        if not simulation_mode:
+            target_nodes[target_type].merge(graph)
     if not silent_mode:
         print("------------------------------- MERGING RELATIONS -------------------------------")
     for target_type in relations.keys():
         if not silent_mode:
             print("Merging relations for target type", target_type)
-        # relations[target_type].merge(graph)
+
+        if not simulation_mode:
+            relations[target_type].merge(graph)
+    if simulation_mode and not silent_mode:
+        kut.display_message('simulation on : nothing was written in DB')
     return True
 
 
@@ -123,12 +160,10 @@ def get_entity_name(link):
     else:
         if len(link.split('/')) < 2:
             entity_name = link.lower().replace("www.", '')
-            parsed_uri = urlparse(link)  # returns six components
             entity_address = 'https:' + '//' + link.lower()
 
         else:
             entity_name = link.split('/')[2].split('?')[0].lower().replace("www.", '')
-            parsed_uri = urlparse(link)  # returns six components
             entity_address = link.split('/')[0] + '//' + link.split('/')[2]
         #         '{uri.netloc}/'.format(uri=parsed_uri).split('/')[0].lower()
         entity_type = 'Website'
@@ -178,12 +213,10 @@ def get_node_information(url, silent_mode=True, marker_id=None):
     else:
         if len(url.split('/')) < 2:
             node_name = url.replace("www.", '')
-            parsed_uri = urlparse(url)  # returns six components
             node_address = 'https:' + '//' + url
 
         else:
             node_name = url.split('/')[2].split('?')[0].replace("www.", '')
-            parsed_uri = urlparse(url)  # returns six components
             node_address = url.split('/')[0] + '//' + url.split('/')[2]
         #         '{uri.netloc}/'.format(uri=parsed_uri).split('/')[0].lower()
         node_type = 'Website'
@@ -199,21 +232,27 @@ def add_node_information(data, url_column='link'):
                       right_index=True)
 
 
-def find_node(graph, entity_type, merge_key, property_name):
+def find_node(graph, node_type, merge_key, property_name, silent_mode=True):
     """Fonction permettant de retrouver un noeud
 
     Args:
-        entity_type ([type]): [description]
+        node_type ([type]): [description]
         merge_key ([type]): [description]
         property_name ([type]): [description]
 
     Returns:
         [type]: [description]
     """
-    return graph.nodes.match(entity_type).where("_." + merge_key + " =~ '" + property_name + "'").first()
+    where_clause = "_." + merge_key + " =~ '" + property_name + "'"
+    if not silent_mode:
+        kut.display_message('find node')
+        print(vars())
+        print('match entity type', node_type)
+        print('where', where_clause)
+    return graph.nodes.match(node_type).where(where_clause).first()
 
 
-def create_and_add_node(graph, entity_type, merge_key, property_name, node=None, silentMode=True):
+def create_and_add_node(graph, entity_type, merge_key, property_name, node=None, silent_mode=True):
     """Fonction permettant de créer et ajouter noeud
 
     Args:
@@ -222,44 +261,64 @@ def create_and_add_node(graph, entity_type, merge_key, property_name, node=None,
         merge_key ([type]): [description]
         property_name ([type]): [description]
         node ([type], optional): [description]. Defaults to None.
+        silent_mode ([type], optional): [description]. Defaults to True.
 
     Returns:
         [type]: [description]
     """
-    from graphio import NodeSet, RelationshipSet
-    if not silentMode:
+
+    if not silent_mode:
         print("Node: ", node)
-    if node == None:
+    if node is None:
         node = NodeSet([entity_type], merge_keys=[merge_key])
         node.add_node({merge_key: property_name})
-        if not silentMode:
+        if not silent_mode:
             print("Node is not provided for ", property_name)
         print(node, property_name)
     else:
         node.add_node({merge_key: property_name})
-        if not silentMode:
+        if not silent_mode:
             print("A Node is provided for ", property_name)
     node.merge(graph)
-    if not silentMode:
+    if not silent_mode:
         print("Graph is merged")
     return node
 
 
-def add_node_if_not_existing(graph, merge_key, property_name, entity_type, node=None, silentMode=True):
+def add_node_if_not_existing(graph, merge_key, property_name, node_type, node=None, silent_mode=True,
+                             simulation_mode=False):
     """Fonction permettant de créer et ajouter un noeud s'il est inexistant
 
     Args:
         graph ([type]): [description]
         merge_key ([type]): [description]
         property_name ([type]): [description]
-        entity_type ([type]): [description]
+        node_type ([type]): [description]
         node ([type], optional): [description]. Defaults to None.
+        silent_mode ([type], optional): [description]. Defaults to True.
     """
-    if find_node(graph, entity_type, merge_key, property_name):
-        if not silentMode:
+    if not silent_mode:
+        kut.display_message('called to create node if existing')
+        print(locals())
+
+    if find_node(
+            graph=graph,
+            node_type=node_type,
+            merge_key=merge_key,
+            property_name=property_name,
+            silent_mode=silent_mode
+    ):
+        if not silent_mode or simulation_mode:
             print("The node {} is already existing.".format(property_name))
         pass
     else:
-        if not silentMode:
+        if not silent_mode or simulation_mode:
             print("The node {} is not existing.".format(property_name))
-        create_and_add_node(graph, entity_type, merge_key, property_name, node, silentMode)
+        create_and_add_node(
+            graph=graph,
+            node_type=node_type,
+            merge_key=merge_key,
+            property_name=property_name,
+            node=node,
+            silent_mode=silent_mode
+        )
