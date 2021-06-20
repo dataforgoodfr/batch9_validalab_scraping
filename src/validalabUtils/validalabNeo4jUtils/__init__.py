@@ -13,7 +13,7 @@ def push_relations(
         graph,
         name_of_relation,
         source_property,
-        target_list,
+        target_list=None,
         source_metadata=None,
         source_type=None,
         silent_mode=True,
@@ -73,6 +73,9 @@ def push_relations(
         print("------------------------------- GETTING TARGETS DATA -------------------------------")
         # ré
     if not dataframe_mode:
+        if target_list is None :
+            print('no targets specified')
+            return False
         target_metadata = [get_node_information(entity) for entity in target_list]
     else:
         target_metadata = [
