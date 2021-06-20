@@ -79,10 +79,11 @@ def push_relations(
         target_metadata = [get_node_information(entity) for entity in target_list]
     else:
         target_metadata = [
-            {'nodeName': row.node_name,
-             'profileURL': row.profileURL,
-             'nodeType': row.nodeType,
-             'nodeExtra': row.nodeExtra
+            {
+                'nodeName': row.nodeName,
+                'profileURL': row.profileURL,
+                'nodeType': row.nodeType,
+                'nodeExtra': row.nodeExtra
              }
             for row in source_metadata
         ]
