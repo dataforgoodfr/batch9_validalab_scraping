@@ -78,6 +78,7 @@ def push_relations(
             return False
         target_metadata = [get_node_information(entity) for entity in target_list]
     else:
+        print(source_metadata)
         target_metadata = [
             {
                 'nodeName': row.nodeName,
