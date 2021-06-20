@@ -42,6 +42,8 @@ def push_relations(
         print(vars())
         print('source data')
         print(source_data)
+    if simulation_mode:
+        kut.display_message(source_metadata['source'])
     if type(target_list) is not list:
         target_list = [target_list]
     if not silent_mode:
