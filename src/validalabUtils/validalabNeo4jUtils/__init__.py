@@ -79,15 +79,12 @@ def push_relations(
         target_metadata = [get_node_information(entity) for entity in target_list]
     else:
         print(source_metadata)
-        target_metadata = [
-            {
-                'nodeName': row.nodeName,
-                'profileURL': row.profileURL,
-                'nodeType': row.nodeType,
-                'nodeExtra': row.nodeExtra
-             }
-            for row in source_metadata
-        ]
+        target_metadata = {
+            'nodeName': source_metadata.nodeName,
+            'profileURL': source_metadata.profileURL,
+            'nodeType': source_metadata.nodeType,
+            'nodeExtra': source_metadata.nodeExtra
+        }
     # récupérer les données des cibles
     target_data = pd.DataFrame.from_dict(target_metadata)
     if not silent_mode:
