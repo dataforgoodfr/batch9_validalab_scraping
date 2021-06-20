@@ -7,15 +7,14 @@ import karmahutils as kut
 warnings.simplefilter(action='ignore')
 
 version_info = "v1.18"
-version_type = 'validalab-scraping'
 
 
 def push_relations(
         graph,
         name_of_relation,
         source_property,
-        source_metadata,
         target_list,
+        source_metadata=None,
         source_type=None,
         silent_mode=True,
         simulation_mode=False
@@ -34,7 +33,14 @@ def push_relations(
 
     # ajouter la source de recommandation à la base de données
     # récupérer les métadonnées de la source via son url
-    source_data = get_node_information(source_metadata['source'])
+    dataframe_mode = False
+    if type(source_metadata) is dict:
+        source_data = get_node_information(source_metadata['source'])
+    if type(source_metadata) is pd.Series:
+        dataframe_mode = True
+        source_data = pd.Series({
+            'nodeName': source_metadata.sourceName,
+        })
     if source_type is not None:
         source_data['nodeType'] = source_type
     if not silent_mode:
@@ -44,6 +50,7 @@ def push_relations(
         print(source_data)
     if simulation_mode:
         kut.display_message(source_metadata['source'])
+
     if type(target_list) is not list:
         target_list = [target_list]
     if not silent_mode:
@@ -65,7 +72,17 @@ def push_relations(
     if not silent_mode:
         print("------------------------------- GETTING TARGETS DATA -------------------------------")
         # ré
-    target_metadata = [get_node_information(entity) for entity in target_list]
+    if not dataframe_mode:
+        target_metadata = [get_node_information(entity) for entity in target_list]
+    else:
+        target_metadata = [
+            {'nodeName': row.node_name,
+             'profileURL': row.profileURL,
+             'nodeType': row.nodeType,
+             'nodeExtra': row.nodeExtra
+             }
+            for row in source_metadata
+        ]
     # récupérer les données des cibles
     target_data = pd.DataFrame.from_dict(target_metadata)
     if not silent_mode:
@@ -122,6 +139,9 @@ def push_relations(
     if simulation_mode and not silent_mode:
         kut.display_message('simulation on : nothing was written in DB')
     return True
+
+
+version_type = 'validalab-scraping'
 
 
 def switch_entity_name(entity_type):
