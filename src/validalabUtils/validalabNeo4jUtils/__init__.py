@@ -49,7 +49,7 @@ def push_relations(
         print('source data')
         print(source_data)
     if simulation_mode:
-        kut.display_message(source_metadata['source'])
+        kut.display_message(source_data['nodeName'])
 
     if type(target_list) is not list:
         target_list = [target_list]
