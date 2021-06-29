@@ -73,7 +73,7 @@ def push_relations(
         print("------------------------------- GETTING TARGETS DATA -------------------------------")
         # ré
     if not dataframe_mode:
-        if target_list is None :
+        if target_list is None:
             print('no targets specified')
             return False
         target_metadata = [get_node_information(entity) for entity in target_list]
@@ -306,8 +306,14 @@ def create_and_add_node(graph, node_type, merge_key, property_name, node=None, s
     return node
 
 
-def add_node_if_not_existing(graph, merge_key, property_name, node_type, node=None, silent_mode=True,
-                             simulation_mode=False):
+def add_node_if_not_existing(
+        graph,
+        merge_key,
+        property_name,
+        node_type,
+        node=None,
+        silent_mode=True,
+        simulation_mode=False):
     """Fonction permettant de créer et ajouter un noeud s'il est inexistant
 
     Args:
@@ -317,18 +323,24 @@ def add_node_if_not_existing(graph, merge_key, property_name, node_type, node=No
         node_type ([type]): [description]
         node ([type], optional): [description]. Defaults to None.
         silent_mode ([type], optional): [description]. Defaults to True.
+        simulation_mode ([type], optional): [description]. Defaults to False.
     """
     if not silent_mode:
         kut.display_message('called to create node if existing')
         print(locals())
 
-    if find_node(
-            graph=graph,
-            node_type=node_type,
-            merge_key=merge_key,
-            property_name=property_name,
-            silent_mode=silent_mode
-    ):
+    search_node = find_node(
+        graph=graph,
+        node_type=node_type,
+        merge_key=merge_key,
+        property_name=property_name,
+        silent_mode=silent_mode
+    )
+    if search_node is None:
+        if not silent_mode or simulation_mode:
+            print("The node type of {} is not recognized.skipped".format(property_name))
+            pass
+    if search_node:
         if not silent_mode or simulation_mode:
             print("The node {} is already existing.".format(property_name))
         pass
@@ -343,5 +355,3 @@ def add_node_if_not_existing(graph, merge_key, property_name, node_type, node=No
             node=node,
             silent_mode=silent_mode
         )
-
-
