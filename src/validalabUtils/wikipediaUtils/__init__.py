@@ -28,7 +28,7 @@ def extract_regex(wikipedia_banlist_entry):
     if pd.isnull(wikipedia_banlist_entry) or not wikipedia_banlist_entry:
         return {'regex': None, 'reason': None}
     entry = wikipedia_banlist_entry.split('#')
-    return {'regex': entry[0].strip(), 'reason': entry[1]}
+    return {'regex':shape_regex(entry[0]) , 'reason':entry[1]}
 
 
 def shape_regex(regex):
