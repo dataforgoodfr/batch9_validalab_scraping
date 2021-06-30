@@ -93,7 +93,7 @@ def compare_with_db(wiki_blacklist_entries, graph):
     :param graph:
     :return:
     """
-    kut.display_message('finding nodes matching the wikipedia banlist entries')
+    kut.display_message('find nodes matching the wikipedia banlist entries')
     start = kut.yet()
     wiki_blacklist_entries = wiki_blacklist_entries.merge(
         wiki_blacklist_entries.apply(
