@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 import warnings
 from graphio import NodeSet, RelationshipSet
 import karmahutils as kut
+from py2neo import Node, Relationship
 
 warnings.simplefilter(action='ignore')
 
@@ -355,3 +356,31 @@ def add_node_if_not_existing(
             node=node,
             silent_mode=silent_mode
         )
+
+
+def create_or_find_entity_from_website_nodename(node_name, graph, simulation_mode=True):
+    node_name = node_name.lower()
+    if len(node_name.split(".")) > 2:
+        node_name = node_name.split(".")[-2] + "." + node_name.split(".")[-1]
+    if len(node_name.split(" ")) > 1:
+        node_name = node_name.split(" ")[0]
+    web_match = graph.nodes.match('Website', site_name=node_name.lower()).first()
+    if web_match is not None:
+        rel = graph.match(r_type="OWNED_BY", nodes=(web_match, None))
+        if rel.first() is not None:
+            entity_match = rel.first().nodes[1]
+            print("Entity :", entity_match['entity_name'], "already in base")
+            return entity_match['entity_name']
+        else:
+            entity_name = web_match['site_name']
+            entity_node = Node('Entity', entity_name=entity_name)
+            entity_node.__primarylabel__ = 'Entity'
+            entity_node.__primarykey__ = 'entity_name'
+            owned_by = Relationship.type("OWNED_BY")
+            if not simulation_mode:
+                graph.merge(owned_by(web_match, entity_node))
+            print("create Entity :", entity_name)
+            return entity_name
+    else:
+        print("Website: ", node_name, "not in base")
+        return None

@@ -1,5 +1,5 @@
 version_number = '0.1.3'
-version = 'validalab-scraping'
+version = 'moonshade'
 
 
 def stringify_object(object_instance):

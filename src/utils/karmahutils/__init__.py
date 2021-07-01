@@ -5,7 +5,6 @@ import dataiku
 import numpy as np
 import pandas as pd
 from random import randint, choice, random
-from nxReferentials import rename_columns
 import string
 import re
 from socket import inet_ntoa
@@ -15,8 +14,65 @@ from sklearn import preprocessing
 import itertools
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
-version_info = "v1.15.2"
-version_type = 'validalab-scraping'
+version_info = "v1.18"
+version_type = 'moonshade library'
+authors = ['Yann Girard', 'Bastien Clausier', 'Afaf Ghazi']
+contact = 'yann.girard@gmail.com'
+lib_name = 'numpyutils'
+purpose = """This lib contains most of the useful quality of life functions
+used in my everyday coding life.It used to be the standalone of the karmah function series.
+It has been shared in various projects I have been involved in."""
+
+
+def split_me(data, batch_size=2):
+    return [df for g, df in data.groupby(np.arange(len(data)) // batch_size)]
+
+
+def load_info(library_name=lib_name, build=version_info):
+    print(f'loaded {library_name} ,version : {version_type} ,build: {build}')
+
+
+# noinspection PyShadowingNames
+def version_info(library_name=lib_name, build=version_info, purpose=purpose, authors=authors, contact=contact):
+    print(f"{library_name} ,version : {version_type} ,build: {build}")
+    print('_' * 5)
+    print(purpose)
+    print('_' * 5)
+    print(f'contributors {authors}')
+    print(f'contact:{contact}')
+
+
+# source: https://www.kaggle.com/ratan123/m5-forecasting-lightgbm-with-timeseries-splits
+def reduce_mem_usage(df, verbose=True):
+    """borrowed from https://www.kaggle.com/ratan123/m5-forecasting-lightgbm-with-timeseries-splits"""
+    numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+    start_mem = df.memory_usage().sum() / 1024 ** 2
+    for col in df.columns:
+        col_type = df[col].dtypes
+        if col_type in numerics:
+            c_min = df[col].min()
+            c_max = df[col].max()
+            if str(col_type)[:3] == 'int':
+                if c_min > np.iinfo(np.int8).min and c_max < np.iinfo(np.int8).max:
+                    df[col] = df[col].astype(np.int8)
+                elif c_min > np.iinfo(np.int16).min and c_max < np.iinfo(np.int16).max:
+                    df[col] = df[col].astype(np.int16)
+                elif c_min > np.iinfo(np.int32).min and c_max < np.iinfo(np.int32).max:
+                    df[col] = df[col].astype(np.int32)
+                elif c_min > np.iinfo(np.int64).min and c_max < np.iinfo(np.int64).max:
+                    df[col] = df[col].astype(np.int64)
+            else:
+                if c_min > np.finfo(np.float16).min and c_max < np.finfo(np.float16).max:
+                    df[col] = df[col].astype(np.float16)
+                elif c_min > np.finfo(np.float32).min and c_max < np.finfo(np.float32).max:
+                    df[col] = df[col].astype(np.float32)
+                else:
+                    df[col] = df[col].astype(np.float64)
+    end_mem = df.memory_usage().sum() / 1024 ** 2
+    if verbose:
+        print('Mem. usage decreased to {:5.2f} Mb ({:.1f}% reduction)'.format(
+            end_mem, 100 * (start_mem - end_mem) / start_mem))
+    return df
 
 
 def numeric_columns(df, include_dates=True):
@@ -165,7 +221,9 @@ def reformat_dict(dictionary, date_format='%Y-%m-%d %H:%M:%S'):
     return dictionary
 
 
-def audit_for_null_values(df, identifier_columns, assessment_columns=[]):
+def audit_for_null_values(df, identifier_columns, assessment_columns=None):
+    if assessment_columns is None:
+        assessment_columns = []
     start = yet()
     print(nu(), 'starting audit_for_null_values()')
     null_values = []
@@ -423,8 +481,8 @@ def same_day(date1, date2):
 
 def update(adf, bdf):
     """ update dataframe with values from dataframe b that are not in a."""
-    adf = trueCopy(adf)
-    bdf = trueCopy(bdf)
+    adf = true_copy(adf)
+    bdf = true_copy(bdf)
     adf_only_col = [X for X in adf.columns if X not in bdf.columns]
     for col in adf_only_col:
         bdf[col] = pd.Series(None, index=bdf.index)
@@ -434,9 +492,9 @@ def update(adf, bdf):
 
 def dtypes_to_mailjet_types(col, df):
     matches = ['int', 'float', 'date']
-    coltype = str(df[col].dtypes)
+    column_type = str(df[col].dtypes)
     for match in matches:
-        if match in coltype:
+        if match in column_type:
             return match
         else:
             continue
@@ -549,77 +607,20 @@ def join_with_default_value(df_left, df_right, right_column, how='left', lsuffix
     return pd.concat(out)
 
 
-# compat stuff
+def format_column_name(column_name):
+    name_parts = [X.replace('ID', 'id') for X in column_name.split('_')]
+    first_part = name_parts[0][0].lower() + name_parts[0][1:]
+    other_parts = [X[0].upper() + X[1:] for X in name_parts[1:]]
+    return ''.join([first_part] + other_parts)
 
 
-def toCamelCase(astring):  # compat
-    """ deprecated use to_camelcase instead"""
-    return to_camelcase(astring)
+def dwh_to_di_renaming_rule(dataframe):
+    return {X: format_column_name(X) for X in dataframe.columns}
 
 
-def displayMessage(message, otherLines=None, lineSep='*', sideSep='*', secondary=False, noReturn=True):  # compat
-    """ deprecated use display_message() instead"""
-    return display_message(message, otherLines, lineSep, sideSep, secondary, noReturn)
+def rename_columns(dataframe, input_format='DWH', output_format='DI'):
+    print('conversion', input_format, 'to', output_format)
+    return dataframe.rename(columns=dwh_to_di_renaming_rule(dataframe=dataframe))
 
 
-def jobDone(start, additions='', noReturn=True):  # compat
-    return job_done(start, additions, noReturn)
-
-
-def columnNamesInCamelCase(df, idPrefix=''):  # compat
-    return column_names_in_camelcase(df, idPrefix)
-
-
-def loadDataset(datasetname):  # compat
-    return load_dataset(datasetname)
-
-
-def isNumeric(value):  # compat
-    return is_numeric(value)
-
-
-def trueCopy(df):  # compat
-    return true_copy(df)
-
-
-def timeColDSStoDatime(df, timeColumnList=None):  # compat
-    """ deprecated use time_col_dss_to_datetime() instead"""
-    return time_col_dss_to_datetime(df, timeColumnList)
-
-
-def fromTimestamp(timestamp, unit='ms'):  # compat
-    return from_timestamp(timestamp, unit)
-
-
-def toTimestamp(date, unit='ms'):  # compat
-    return to_timestamp(date, unit)
-
-
-def back2int(newdf, joinee1, joinee2, floatfill=0.0, intfill=0):
-    """newdf as (usually) the result of an outerjoin where some values are empty
-     joinee1,joinee2 are the original dataset who did contain those numeric values
-     this function (in this form) only works if all numeric columns originate from the same dataframe.
-     deprecated us back_to_int instead
-     """
-    return back_to_int(newdf, joinee1, joinee2, floatfill, intfill)
-
-
-def filestamp(short=False):  # compat
-    return file_stamp(short)
-
-
-def sameDay(date1, date2):  # compat
-    return same_day(date1, date2)
-
-
-def myUpdate(adf, bdf):  # compat
-    """deprecated"""
-    return update(adf, bdf)
-
-
-def dtypesToMJTypes(col, df):  # compat
-    """deprecated us dtypes_to_mailjet_types() instead"""
-    return dtypes_to_mailjet_types(col, df)
-
-
-print('loaded karmahutils', version_type, version_info)
+load_info()

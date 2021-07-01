@@ -4,7 +4,6 @@ import pandas as pd
 from py2neo import Graph, Node, Relationship
 import karmahutils as kut
 
-
 version_info = "v0.1"
 version_type = 'moonshade library'
 authors = ['Yann Girard']

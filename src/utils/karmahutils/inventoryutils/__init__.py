@@ -3,15 +3,15 @@ import karmahutils as kut
 import re
 
 version_number = '1.4.2'
-version = 'validalab-scraping'
+version = 'moonshade'
 
 
 def parse_columns_date(
         data,
         columns,
         errors='raise',
-        dayfirst=False,
-        yearfirst=False,
+        first_day=False,
+        first_year=False,
         utc=None,
         format=None,
         exact=True,
@@ -35,8 +35,8 @@ def parse_columns_date(
         data[column] = pd.to_datetime(
             data[column],
             errors=errors,
-            dayfirst=dayfirst,
-            yearfirst=yearfirst,
+            dayfirst=first_day,
+            yearfirst=first_year,
             utc=utc,
             format=format,
             exact=exact,
@@ -52,7 +52,9 @@ def parse_columns_date(
         return None if inplace else df
 
 
-def fix_literal_numbers(value, thousand_separators=[' ', ','], decimal_separator='.', unit=None):
+def fix_literal_numbers(value, thousand_separators=None, decimal_separator='.', unit=None):
+    if thousand_separators is None:
+        thousand_separators = [' ', ',']
     if pd.isnull(value):
         return
     if kut.is_numeric(value):
@@ -71,12 +73,14 @@ def fix_literal_numbers(value, thousand_separators=[' ', ','], decimal_separator
 def fix_columns_literal_numbers(
         data,
         columns,
-        thousand_separators=[' ', ','],
+        thousand_separators=None,
         decimal_separators='.',
         silent_mode=True,
         inplace=False,
         units=None
 ):
+    if thousand_separators is None:
+        thousand_separators = [' ', ',']
     df = data if inplace else data.copy()
     if not silent_mode:
         kut.display_message('fixing literal numbers')
