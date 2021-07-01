@@ -1,4 +1,4 @@
-from src.validalabUtils.validalabNeo4jUtils import *
+from src.validalabUtils.neo4jUtils import *
 
 
 def create_dict(row, json, prefixe, silentMode=True):
